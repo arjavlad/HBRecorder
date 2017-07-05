@@ -207,7 +207,14 @@
 
         } else {
             if (!exportSession.cancelled) {
-                [[[UIAlertView alloc] initWithTitle:@"Failed to save" message:error.localizedDescription delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil] show];
+                UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Failed to save!" message:error.localizedDescription preferredStyle:UIAlertControllerStyleAlert];
+                UIAlertAction *actionOK = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+                    
+                }];
+                [alert addAction:actionOK];
+                [self presentViewController:alert animated:YES completion:^{
+                    
+                }];
             }
         }
     }];

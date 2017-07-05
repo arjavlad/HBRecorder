@@ -55,9 +55,23 @@
     
     [image saveToCameraRollWithCompletion:^(NSError * _Nullable error) {
         if (error == nil) {
-            [[[UIAlertView alloc] initWithTitle:@"Done!" message:@"" delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil] show];
+            UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Done!" message:nil preferredStyle:UIAlertControllerStyleAlert];
+            UIAlertAction *actionOK = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+                
+            }];
+            [alert addAction:actionOK];
+            [self presentViewController:alert animated:YES completion:^{
+                
+            }];
         } else {
-            [[[UIAlertView alloc] initWithTitle:@"Failed :(" message:error.localizedDescription delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil] show];
+            UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Failed :(" message:nil preferredStyle:UIAlertControllerStyleAlert];
+            UIAlertAction *actionOK = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+                
+            }];
+            [alert addAction:actionOK];
+            [self presentViewController:alert animated:YES completion:^{
+                
+            }];
         }
     }];
 }

@@ -9,9 +9,9 @@
 #import "HBEditVideoViewController.h"
 #import <MobileCoreServices/UTCoreTypes.h>
 #import "SCVideoPlayerView.h"
+#import "HBTrimVideoViewController.h"
 
-
-@interface HBEditVideoViewController ()<SCVideoPlayerViewDelegate> {
+@interface HBEditVideoViewController ()<SCVideoPlayerViewDelegate, UICollectionViewDelegate, UICollectionViewDataSource> {
     NSMutableArray *_thumbnails;
     NSInteger _currentSelected;
 }
@@ -26,13 +26,14 @@
     self.videoPlayerView.tapToPauseEnabled = YES;
     self.videoPlayerView.player.loopEnabled = YES;
     self.videoPlayerView.delegate = self;
+    [self.collectionView reloadData];
 }
 
 - (BOOL)prefersStatusBarHidden {
     return YES;
 }
 
--(void)togglePlayPauseBtn {
+- (void)togglePlayPauseBtn {
     
     if(self.videoPlayerView.player.isPlaying) {
         //To hide
@@ -50,50 +51,47 @@
         } completion:^(BOOL finished) {
             
         }];
-
+        
     }
 }
 
-
-
-#pragma mark SCVideoPlayerViewDelegate
+#pragma mark-  SCVideoPlayerViewDelegate
 - (void)videoPlayerViewTappedToPlay:(SCVideoPlayerView *__nonnull)videoPlayerView {
     [self togglePlayPauseBtn];
 }
 
-- (void)videoPlayerViewTappedToPause:(SCVideoPlayerView *__nonnull)videoPlayerView;
-{
+- (void)videoPlayerViewTappedToPause:(SCVideoPlayerView *__nonnull)videoPlayerView {
     [self togglePlayPauseBtn];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     
-//    self.navigationController.navigationBar.hidden = YES;
+    //    self.navigationController.navigationBar.hidden = YES;
     
-    _scrollView.frame = CGRectMake(_scrollView.frame.origin.x, _scrollView.frame.origin.y, _scrollView.frame.size.width , 110);
+    //    _scrollView.frame = CGRectMake(_scrollView.frame.origin.x, _scrollView.frame.origin.y, _scrollView.frame.size.width , 110);
     
-    NSMutableArray *thumbnails = [NSMutableArray new];
-    NSInteger i = 0;
+    //    NSMutableArray *thumbnails = [NSMutableArray new];
+    //    NSInteger i = 0;
     
-    for (SCRecordSessionSegment *segment in self.recordSession.segments) {
-        UIImageView *imageView = [[UIImageView alloc] init];
-        imageView.contentMode = UIViewContentModeScaleAspectFit;
-        imageView.image = segment.thumbnail;
-        UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(touchedVideo:)];
-        imageView.userInteractionEnabled = YES;
-        
-        [imageView addGestureRecognizer:tapGesture];
-        
-        [thumbnails addObject:imageView];
-        
-        [self.scrollView addSubview:imageView];
-        
-        i++;
-    }
-    
-    _thumbnails = thumbnails;
-    
+    //    for (SCRecordSessionSegment *segment in self.recordSession.segments) {
+    //        UIImageView *imageView = [[UIImageView alloc] init];
+    //        imageView.contentMode = UIViewContentModeScaleAspectFit;
+    //        imageView.image = segment.thumbnail;
+    //        UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(touchedVideo:)];
+    //        imageView.userInteractionEnabled = YES;
+    //
+    //        [imageView addGestureRecognizer:tapGesture];
+    //
+    //        [thumbnails addObject:imageView];
+    //
+    //        [self.scrollView addSubview:imageView];
+    //
+    //        i++;
+    //    }
+    //
+    //    _thumbnails = thumbnails;
+    //
     [self reloadScrollView];
     [self showVideo:0];
 }
@@ -106,8 +104,17 @@
 
 - (void)touchedVideo:(UITapGestureRecognizer *)gesture {
     NSInteger idx = [_thumbnails indexOfObject:gesture.view];
-    
     [self showVideo:idx];
+}
+
+- (void)handleTrimmedVideoURL:(NSURL *)videoURL {
+    if (_currentSelected < self.recordSession.segments.count) {
+        SCRecordSessionSegment *segment = [[SCRecordSessionSegment alloc] initWithURL:videoURL info:nil];
+        if (segment) {
+            [self.recordSession removeSegmentAtIndex:_currentSelected deleteFile:YES];
+            [self.recordSession insertSegment:segment atIndex:_currentSelected];
+        }
+    }
 }
 
 - (void)showVideo:(NSInteger)idx {
@@ -120,10 +127,17 @@
         [self.videoPlayerView.player setItemByAsset:segment.asset];
         [self.videoPlayerView.player play];
         [self togglePlayPauseBtn];
+    } else {
+        [self.videoPlayerView.player pause];
+        [UIView animateWithDuration:0.25 animations:^{
+            [_playPauseImageView setAlpha:0.1f];
+        } completion:^(BOOL finished) {
+            _playPauseImageView.hidden = YES;
+        }];
     }
     
     _currentSelected = idx;
-
+    
     for (NSInteger i = 0; i < _thumbnails.count; i++) {
         UIImageView *imageView = [_thumbnails objectAtIndex:i];
         
@@ -132,18 +146,17 @@
 }
 
 - (void)reloadScrollView {
-    
-    _lblClipsCounter.text =  @(_recordSession.segments.count).stringValue;
-    
+    [self.collectionView reloadData];
     int totalSeconds = CMTimeGetSeconds(_recordSession.duration);
     int seconds = totalSeconds % 60;
     int minutes = (totalSeconds / 60) % 60;
     
-    _lblClipsDuration.text = [NSString stringWithFormat:@"%02d:%02d",minutes, seconds];
-     
+    self.lblClipsDuration.text = [NSString stringWithFormat:@"%02d:%02d",minutes, seconds];
+    self.lblClipsCounter.text =  @(_recordSession.segments.count).stringValue;
+    return;
     
     CGFloat cellSize = self.scrollView.frame.size.height;
-        
+    
     int i = 0;
     
     float imgWidth = 0;
@@ -168,16 +181,17 @@
 - (IBAction)deletePressed:(id)sender {
     if (_currentSelected < _recordSession.segments.count) {
         [_recordSession removeSegmentAtIndex:_currentSelected deleteFile:YES];
-        UIImageView *imageView = [_thumbnails objectAtIndex:_currentSelected];
-        [_thumbnails removeObjectAtIndex:_currentSelected];
-        [UIView animateWithDuration:0.3 animations:^{
-            imageView.transform = CGAffineTransformMakeScale(0, 0);
-            [self reloadScrollView];
-        } completion:^(BOOL finished) {
-            [imageView removeFromSuperview];
-        }];
-        
+        [self reloadScrollView];
         [self showVideo:_currentSelected % _recordSession.segments.count];
+        //        UIImageView *imageView = [_thumbnails objectAtIndex:_currentSelected];
+        //        [_thumbnails removeObjectAtIndex:_currentSelected];
+        //        [UIView animateWithDuration:0.3 animations:^{
+        //            imageView.transform = CGAffineTransformMakeScale(0, 0);
+        //            [self reloadScrollView];
+        //        } completion:^(BOOL finished) {
+        //            [imageView removeFromSuperview];
+        //        }];
+        
     }
 }
 
@@ -191,7 +205,31 @@
     [self.navigationController popViewControllerAnimated:YES];
 }
 
+- (IBAction)trimPressed:(UIButton *)sender {
+    if (_currentSelected < self.recordSession.segments.count) {
+        SCRecordSessionSegment *segment = [_recordSession.segments objectAtIndex:_currentSelected];
+        if (segment.asset) {
+            [HBTrimVideoViewController trimVideo:segment.asset.copy
+                                              on:self
+                                      completion:^(BOOL success, NSError *error, NSURL *videoUrl) {
+                                          dispatch_async(dispatch_get_main_queue(), ^{
 
+                                              if (success && !error && videoUrl) {
+                                                  [self handleTrimmedVideoURL:videoUrl.copy];
+                                              } else {
+                                                  UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Error!" message:error.localizedDescription preferredStyle:UIAlertControllerStyleAlert];
+                                                  [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+                                                      
+                                                  }]];
+                                                  [self presentViewController:alert animated:YES completion:^{
+                                                      
+                                                  }];
+                                              }
+                                          });
+                                      }];
+        }
+    }
+}
 
 - (BOOL)startMediaBrowser {
     //Validations
@@ -215,8 +253,27 @@
     [picker dismissViewControllerAnimated:YES completion:nil];
     
     SCRecordSessionSegment *segment = [SCRecordSessionSegment segmentWithURL:url info:nil];
-    
     [_recordSession addSegment:segment];
+    [self reloadScrollView];
+}
+
+
+#pragma mark- CollectionView Delegate and Datasource Methods
+- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
+    return self.recordSession.segments.count;
+}
+
+- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
+    UICollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"VideoThumbClnViewCell" forIndexPath:indexPath];
+    SCRecordSessionSegment *segment = self.recordSession.segments[indexPath.item];
+    UIImageView *imageView = (UIImageView *)[cell viewWithTag:111];
+    imageView.image = segment.thumbnail;
+    imageView.contentMode = UIViewContentModeScaleAspectFit;
+    return cell;
+}
+
+- (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
+    [self showVideo:indexPath.item];
 }
 
 @end

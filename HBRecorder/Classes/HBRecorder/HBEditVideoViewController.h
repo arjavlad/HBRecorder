@@ -14,6 +14,8 @@
 @property (weak, nonatomic) IBOutlet UIScrollView *scrollView;
 @property (strong, nonatomic) IBOutlet UILabel *lblClipsCounter;
 @property (strong, nonatomic) IBOutlet UILabel *lblClipsDuration;
+@property (weak, nonatomic) IBOutlet UICollectionView *collectionView;
+
 
 
 - (IBAction)deletePressed:(id)sender;

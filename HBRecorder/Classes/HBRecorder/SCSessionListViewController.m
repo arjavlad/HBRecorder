@@ -21,7 +21,7 @@
 {
     [super viewDidLoad];
     
-    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Save current" style:UIBarButtonItemStyleBordered target:self action:@selector(saveCurrentRecordSession)];
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Save current" style:UIBarButtonItemStylePlain target:self action:@selector(saveCurrentRecordSession)];
     // Do any additional setup after loading the view.
 }
 

@@ -36,12 +36,9 @@
     // Dispose of any resources that can be recreated.
 }
 
-
 -(void)viewWillAppear:(BOOL)animated {
     
 }
-
-
 
 #pragma mark - Video Recording Methods
 
@@ -94,9 +91,6 @@
     NSLog(@"Recorder did cancel..");
 }
 
-
-
-
 //To play video
 
 - (IBAction)playVideo:(id)sender {
@@ -116,20 +110,16 @@
     
     HBRecorder *recorder = [sb instantiateViewControllerWithIdentifier:@"HBRecorder"];
     recorder.delegate = self;
-    recorder.topTitle = @"Top title";
-    recorder.bottomTitle = @"HilalB - ©";
-    recorder.maxRecordDuration = 60 * 3;
+    recorder.topTitle = @"";
+    recorder.bottomTitle = @"mammafoodie - ©";
+    recorder.maxRecordDuration = 60;
     recorder.movieName = @"MyAnimatedMovie";
     
     
     recorder.modalTransitionStyle = UIModalTransitionStyleFlipHorizontal;
     [self.navigationController pushViewController:recorder animated:YES];
-    
-    
-    
 
 }
-
 
 /*
  #pragma mark - Navigation

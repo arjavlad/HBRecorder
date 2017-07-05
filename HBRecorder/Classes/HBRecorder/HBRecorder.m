@@ -43,12 +43,12 @@
 
 @implementation HBRecorder
 
-#pragma mark - UIViewController 
+#pragma mark - UIViewController
 
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_7_0
 
 - (UIStatusBarStyle) preferredStatusBarStyle {
-	return UIStatusBarStyleLightContent;
+    return UIStatusBarStyleLightContent;
 }
 
 #endif
@@ -70,7 +70,7 @@
     _ghostImageView.hidden = YES;
     
     [self.view insertSubview:_ghostImageView aboveSubview:self.previewView];
-
+    
     _recorder = [SCRecorder recorder];
     _recorder.captureSessionPreset = [SCRecorderTools bestCaptureSessionPresetCompatibleWithAllDevices];
     
@@ -78,19 +78,19 @@
         _recorder.maxRecordDuration = CMTimeMake(_maxRecordDuration, 1);
     }
     
-//    _recorder.fastRecordMethodEnabled = YES;
+    //    _recorder.fastRecordMethodEnabled = YES;
     
     _recorder.delegate = self;
-    _recorder.autoSetVideoOrientation = YES; //YES causes bad orientation for video from camera roll
+    _recorder.autoSetVideoOrientation = NO; //YES causes bad orientation for video from camera roll
     
     UIView *previewView = self.previewView;
     _recorder.previewView = previewView;
     
     [self.retakeButton addTarget:self action:@selector(handleRetakeButtonTapped:) forControlEvents:UIControlEventTouchUpInside];
     [self.stopButton addTarget:self action:@selector(handleStopButtonTapped:) forControlEvents:UIControlEventTouchUpInside];
-	[self.reverseCamera addTarget:self action:@selector(handleReverseCameraTapped:) forControlEvents:UIControlEventTouchUpInside];
+    [self.reverseCamera addTarget:self action:@selector(handleReverseCameraTapped:) forControlEvents:UIControlEventTouchUpInside];
     
-//    [self.recordView addGestureRecognizer:[[SCTouchDetector alloc] initWithTarget:self action:@selector(handleTouchDetected:)]];
+    //    [self.recordView addGestureRecognizer:[[SCTouchDetector alloc] initWithTarget:self action:@selector(handleTouchDetected:)]];
     self.loadingView.hidden = YES;
     
     self.focusView = [[SCRecorderToolsView alloc] initWithFrame:previewView.bounds];
@@ -99,7 +99,7 @@
     [previewView addSubview:self.focusView];
     
     self.focusView.outsideFocusTargetImage = [self imageNamed:@"focus"];
-
+    
     _recorder.initializeSessionLazily = NO;
     
     NSError *error;
@@ -113,7 +113,7 @@
         _flashModeButton.hidden = YES;
     }
     
-
+    
     // Setup images for the Shutter Button
     UIImage *image;
     image = [self imageNamed:@"ShutterButtonStart"];
@@ -138,7 +138,7 @@
     NSBundle *bundle = [NSBundle bundleForClass:HBRecorder.class];
     
     return [UIImage imageNamed:imgName inBundle:bundle compatibleWithTraitCollection:nil];
-
+    
 }
 
 - (void)recorder:(SCRecorder *)recorder didSkipVideoSampleBufferInSession:(SCRecordSession *)recordSession {
@@ -158,7 +158,7 @@
     
     [self prepareSession];
     
-	self.navigationController.navigationBarHidden = YES;
+    self.navigationController.navigationBarHidden = YES;
 }
 
 - (void)viewDidLayoutSubviews {
@@ -175,7 +175,7 @@
 
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
-
+    
     [_recorder stopRunning];
 }
 
@@ -188,8 +188,14 @@
 #pragma mark - Handle
 
 - (void)showAlertViewWithTitle:(NSString*)title message:(NSString*) message {
-    UIAlertView * alertView = [[UIAlertView alloc] initWithTitle:title message:message delegate:nil cancelButtonTitle:nil otherButtonTitles:@"OK", nil];
-    [alertView show];
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:title message:message preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction *actionOK = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        
+    }];
+    [alert addAction:actionOK];
+    [self presentViewController:alert animated:YES completion:^{
+        
+    }];
 }
 
 - (void)showVideo {
@@ -201,8 +207,6 @@
         HBVideoPlayerViewController *videoPlayer = segue.destinationViewController;
         videoPlayer.recordSession = _recordSession;
         videoPlayer.parent = self;
-        
-        
         
     } else if ([segue.destinationViewController isKindOfClass:[SCImageDisplayerViewController class]]) {
         SCImageDisplayerViewController *imageDisplayer = segue.destinationViewController;
@@ -221,7 +225,7 @@
 }
 
 - (void) handleReverseCameraTapped:(id)sender {
-	[_recorder switchCaptureDevices];
+    [_recorder switchCaptureDevices];
 }
 
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info {
@@ -236,6 +240,7 @@
     
     [self showVideo];
 }
+
 - (void) handleStopButtonTapped:(id)sender {
     [_recorder pause:^{
         [self saveAndShowSession:_recorder.session];
@@ -244,7 +249,7 @@
 
 - (void)saveAndShowSession:(SCRecordSession *)recordSession {
     [[SCRecordSessionManager sharedInstance] saveRecordSession:recordSession];
-        
+    
     _recordSession = recordSession;
     [self showVideo];
 }
@@ -263,7 +268,7 @@
         }
     }
     
-	[self prepareSession];
+    [self prepareSession];
 }
 
 - (IBAction)switchCameraMode:(id)sender {
@@ -274,7 +279,7 @@
             self.retakeButton.alpha = 1.0;
             self.stopButton.alpha = 1.0;
         } completion:^(BOOL finished) {
-			_recorder.captureSessionPreset = kVideoPreset;
+            _recorder.captureSessionPreset = kVideoPreset;
             [self.switchCameraModeButton setTitle:@"Switch Photo" forState:UIControlStateNormal];
             [self.flashModeButton setTitle:@"Flash : Off" forState:UIControlStateNormal];
             _recorder.flashMode = SCFlashModeOff;
@@ -286,7 +291,7 @@
             self.stopButton.alpha = 0.0;
             self.capturePhotoButton.alpha = 1.0;
         } completion:^(BOOL finished) {
-			_recorder.captureSessionPreset = AVCaptureSessionPresetPhoto;
+            _recorder.captureSessionPreset = AVCaptureSessionPresetPhoto;
             [self.switchCameraModeButton setTitle:@"Switch Video" forState:UIControlStateNormal];
             [self.flashModeButton setTitle:@"Flash : Auto" forState:UIControlStateNormal];
             _recorder.flashMode = SCFlashModeAuto;
@@ -299,20 +304,24 @@
     if ([_recorder.captureSessionPreset isEqualToString:AVCaptureSessionPresetPhoto]) {
         switch (_recorder.flashMode) {
             case SCFlashModeAuto:
-                flashModeString = @"Flash : Off";
+                flashModeString = @"FlashOff";
                 _recorder.flashMode = SCFlashModeOff;
+                [self.flashModeButton setSelected:NO];
                 break;
             case SCFlashModeOff:
-                flashModeString = @"Flash : On";
+                flashModeString = @"FlashOn";
                 _recorder.flashMode = SCFlashModeOn;
+                [self.flashModeButton setSelected:YES];
                 break;
             case SCFlashModeOn:
-                flashModeString = @"Flash : Light";
+                flashModeString = @"FlashOn";
                 _recorder.flashMode = SCFlashModeLight;
+                [self.flashModeButton setSelected:YES];
                 break;
             case SCFlashModeLight:
-                flashModeString = @"Flash : Auto";
+                flashModeString = @"FlashOn";
                 _recorder.flashMode = SCFlashModeAuto;
+                [self.flashModeButton setSelected:YES];
                 break;
             default:
                 break;
@@ -320,19 +329,22 @@
     } else {
         switch (_recorder.flashMode) {
             case SCFlashModeOff:
-                flashModeString = @"Flash : On";
+                flashModeString = @"FlashOn";
+                [self.flashModeButton setSelected:YES];
                 _recorder.flashMode = SCFlashModeLight;
                 break;
             case SCFlashModeLight:
-                flashModeString = @"Flash : Off";
+                flashModeString = @"FlashOff";
                 _recorder.flashMode = SCFlashModeOff;
+                [self.flashModeButton setSelected:NO];
                 break;
             default:
                 break;
         }
     }
     
-//    [self.flashModeButton setTitle:flashModeString forState:UIControlStateNormal];
+    //    [self.flashModeButton setImage:[UIImage imageNamed:flashModeString] forState:UIControlStateNormal];
+    //    [self.flashModeButton setTitle:flashModeString forState:UIControlStateNormal];
     
     
 }
@@ -422,10 +434,10 @@
             image = segment.lastImage;
         }
     }
-
+    
     
     _ghostImageView.image = image;
-//    _ghostImageView.image = [_recorder snapshotOfLastAppendedVideoBuffer];
+    //    _ghostImageView.image = [_recorder snapshotOfLastAppendedVideoBuffer];
     _ghostImageView.hidden = !_ghostModeButton.selected;
 }
 
@@ -440,14 +452,13 @@
     [self updateGhostImage];
 }
 
-
 - (BOOL)shouldAutorotate{
     return NO;
 }
 
-- (NSUInteger)supportedInterfaceOrientations{
-    return UIInterfaceOrientationPortrait |
-    UIInterfaceOrientationPortraitUpsideDown;
+- (UIInterfaceOrientationMask)supportedInterfaceOrientations{
+    return UIInterfaceOrientationMaskPortrait |
+    UIInterfaceOrientationMaskPortraitUpsideDown;
 }
 
 - (UIInterfaceOrientation)preferredInterfaceOrientationForPresentation{
@@ -457,8 +468,6 @@
 - (BOOL)shouldAutorotateToInterfaceOrientation: (UIInterfaceOrientation)interfaceOrientation {
     return NO;
 }
-
-
 
 - (IBAction)shutterButtonTapped:(UIButton *)sender {
     
@@ -480,21 +489,19 @@
         [self.recBtn setImage:self.recStopImage
                      forState:UIControlStateNormal];
         
-         [_recorder record];
+        [_recorder record];
         
     }
     // REC STOP
     else {
-    
+        
         [_recorder pause];
         // change UI
         [self.recBtn setImage:self.recStartImage
                      forState:UIControlStateNormal];
     }
-
+    
 }
-
-
 
 - (IBAction)toolsButtonTapped:(UIButton *)sender {
     CGRect toolsFrame = self.toolsContainerView.frame;
@@ -515,11 +522,12 @@
         self.openToolsButton.frame = openToolsButtonFrame;
     }];
 }
+
 - (IBAction)closeCameraTapped:(id)sender {
     [self.delegate recorderDidCancel:self];
     
     self.navigationController.navigationBarHidden = NO;
-
+    
     [self.navigationController popViewControllerAnimated:YES];
 }
 
